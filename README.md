@@ -1,1 +1,1 @@
-# Cisco-AMP-for-Endpoint-Dublicate-Finder
+# Cisco AMP for Endpoint Dublicate Finder
