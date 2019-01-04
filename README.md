@@ -1,4 +1,4 @@
-# Cisco AMP for Endpoint Dublicate Finder
+# Cisco AMP for Endpoint Duplicate Finder
 
 ![N|Solid](https://raw.githubusercontent.com/azizaltuntas/Cisco-AMP-for-Endpoint-Dublicate-Finder/master/img/github.PNG)
 
