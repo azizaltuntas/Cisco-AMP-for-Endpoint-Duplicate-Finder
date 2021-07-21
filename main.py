@@ -26,61 +26,61 @@ class Ui_Dialog(QMainWindow):
 
         try:
 
-            if self.lineEdit.text() == "" or self.lineEdit_2.text() == "" or self.lineEdit_5.text() == "":
+            if self.inputApiFQDN.text() == "" or self.inputClientId.text() == "" or self.inputApiKey.text() == "":
 
-                self.alert("Input Error","Please Enter All Settings ! ")
+                self.alert("Input Error","Please enter all settings!")
 
             else:
 
                 self.headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8','accept': 'application/json','Accept-Encoding': 'gzip'}
 
-                self.url = 'http://{0}:{1}@{2}/version'.format(self.lineEdit.text(),self.lineEdit_2.text(),self.lineEdit_5.text())
+                self.url = 'http://{0}:{1}@{2}/v1/version'.format(self.inputApiFQDN.text(),self.inputClientId.text(),self.inputApiKey.text())
 
                 self.req = requests.get(self.url, headers=self.headers)
                 
 
                 if self.req.status_code == 401:
-                    self.alert("Connection","Api Key or Client ID Wrong !")
+                    self.alert("Connection","Wrong Api Key or Client ID!")
 
                 elif self.req.status_code == 200:
-                    self.alert("Connection","Connection Successfull !")
-                    self.pushButton_2.setEnabled(True)
+                    self.alert("Connection","Connection successful!")
+                    self.LoadComputersButton.setEnabled(True)
 
 
         except Exception as e:
-            self.alert("Warning","Connection ERROR !")
+            self.alert("Warning","Connection error!")
 
     def deleteComputer(self,guid):
 
         try:
 
-            self.deleteurl = "https://{0}:{1}@{2}/computers/{3}".format(self.lineEdit.text(),self.lineEdit_2.text(),self.lineEdit_5.text(),guid)
+            self.deleteurl = "https://{0}:{1}@{2}/v1/computers/{3}".format(self.inputApiFQDN.text(),self.inputClientId.text(),self.inputApiKey.text(),guid)
 
             self.delreq = requests.delete(self.deleteurl,headers=self.headers)
             self.deljson = self.delreq.json()
 
             if str(self.deljson['data']['deleted']) == "True":
-                self.listWidget.addItem(guid+" : "+"DELETED !")
+                self.DeleteDuplicatesArea.addItem(guid+" : "+"Deleted!")
             else:
-                self.listWidget.addItem(guid+" : "+"NOT DELETED !")
+                self.DeleteDuplicatesArea.addItem(guid+" : "+"Not deleted!")
 
         except Exception as f:
 
             t, o, tb = sys.exc_info()
-            self.listWidget.addItem(guid+" : "+"NOT DELETED !")
+            self.DeleteDuplicatesArea.addItem(guid+" : "+"Not deleted!")
             print(f,tb.tb_lineno)            
 
 
-    def sendDeleteFunc(self):
+    def runSendDelete(self):
 
-        for i in range(self.listWidget.count()):
-            thread = threading.Thread(target=self.deleteComputer,args=(self.listWidget.item(i).text(),))
+        for i in range(self.DeleteDuplicatesArea.count()):
+            thread = threading.Thread(target=self.deleteComputer,args=(self.DeleteDuplicatesArea.item(i).text(),))
             thread.daemon = True
             thread.start()
 
     def sendDelete(self):
 
-        thread = threading.Thread(target=self.sendDeleteFunc)
+        thread = threading.Thread(target=self.runSendDelete)
         thread.start()
 
 
@@ -88,7 +88,7 @@ class Ui_Dialog(QMainWindow):
 
         try:
             
-            self.url = 'http://{0}:{1}@{2}/computers?offset='.format(self.lineEdit.text(),self.lineEdit_2.text(),self.lineEdit_5.text())
+            self.url = 'http://{0}:{1}@{2}/v1/computers?offset='.format(self.inputApiFQDN.text(),self.inputClientId.text(),self.inputApiKey.text())
 
             while True:
 
@@ -125,8 +125,8 @@ class Ui_Dialog(QMainWindow):
                 qu.task_done()
                 qu2.task_done()
 
-                self.lineEdit_3.setText(str(self.s)+" Computer")
-                self.pushButton_3.setEnabled(True)
+                self.inputAllComputersTotal.setText(str(self.s)+" Computer")
+                self.LoadDuplicatesButton.setEnabled(True)
 
         except Exception as f:
 
@@ -144,7 +144,7 @@ class Ui_Dialog(QMainWindow):
 
         try:
 
-            self.url2 = 'http://{0}:{1}@{2}/computers'.format(self.lineEdit.text(),self.lineEdit_2.text(),self.lineEdit_5.text())
+            self.url2 = 'http://{0}:{1}@{2}/v1/computers'.format(self.inputApiFQDN.text(),self.inputClientId.text(),self.inputApiKey.text())
             self.req = requests.get(self.url2, headers=self.headers)
             self.full2 = self.req.json()
 
@@ -193,12 +193,12 @@ class Ui_Dialog(QMainWindow):
 
                 self.gek = hosts.get()
 
-                self.get = 'http://{0}:{1}@{2}/computers?hostname[]='.format(self.lineEdit.text(),self.lineEdit_2.text(),self.lineEdit_5.text())
+                self.get = 'http://{0}:{1}@{2}/v1/computers?hostname[]='.format(self.inputApiFQDN.text(),self.inputClientId.text(),self.inputApiKey.text())
 
 
                 self.req = requests.get(self.get+str(self.gek),headers=self.headers)
                 self.getjson = self.req.json()
-                self.cse = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
+                self.cse = QtWidgets.QTreeWidgetItem(self.DuplicateComputersArea)
 
                 for getfull in self.getjson['data']:
 
@@ -210,13 +210,13 @@ class Ui_Dialog(QMainWindow):
 
                     self.item = QtWidgets.QTreeWidgetItem(self.cse)
 
-                    self.item.setText(0,"Last Seen: "+getfull['last_seen']+"\n"+"C-GUID: "+getfull['connector_guid']+"\n"+"C-Version: "+getfull['connector_version'])
+                    self.item.setText(0,"Last Seen: "+getfull['last_seen']+"\n"+"GUID: "+getfull['connector_guid']+"\n"+"Version: "+getfull['connector_version'])
 
                     
                 hosts.task_done()
 
                 
-                self.lineEdit_4.setText(str(len(self.duplicatelist))+" Duplicate")
+                self.inputDuplicateComputersTotal.setText(str(len(self.duplicatelist))+" Duplicate")
 
 
                 count = 0
@@ -225,7 +225,7 @@ class Ui_Dialog(QMainWindow):
             t, o, tb = sys.exc_info()
             print(f,tb.tb_lineno)
 
-    def getdublicatefunc(self):
+    def RunGetDuplicate(self):
 
         try:
 
@@ -259,15 +259,15 @@ class Ui_Dialog(QMainWindow):
             print(f,tb.tb_lineno)
 
 
-    def getdublicate(self):
-        thread = threading.Thread(target=self.getdublicatefunc)
+    def GetDuplicate(self):
+        thread = threading.Thread(target=self.RunGetDuplicate)
         thread.start()
 
     def olurmu(self):
 
         #Seçilen itemlerin yazıldığı fonksiyon
 
-        fullitems = self.treeWidget_2.selectedItems()
+        fullitems = self.DuplicateComputersArea.selectedItems()
         
         if fullitems:
             base = fullitems[0]
@@ -276,101 +276,21 @@ class Ui_Dialog(QMainWindow):
             reitems = reitems.split()
             for i in reitems:
                 if re.findall(r'[a-z0-9]{8}[-][a-z0-9]{4}[-][a-z0-9]{4}[-][a-z0-9]{4}[-][a-z0-9]{12}',i):
-                    itemsList =  [str(self.listWidget.item(l).text()) for l in range(self.listWidget.count())]
+                    itemsList =  [str(self.DeleteDuplicatesArea.item(l).text()) for l in range(self.DeleteDuplicatesArea.count())]
                     if i in itemsList:
                         None
                     else:
                         self.b += 1
-                        self.listWidget.addItem(i)
-                        self.lineEdit_6.setText(str(self.b))
-                        self.pushButton_4.setEnabled(True)
+                        self.DeleteDuplicatesArea.addItem(i)
+                        self.inputDeleteDuplicateTotal.setText(str(self.b))
+                        self.DeleteDuplicatesButton.setEnabled(True)
 
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1120, 749)
+        MainWindow.setFixedSize(1120, 749) #resize
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox.setGeometry(QtCore.QRect(20, 180, 531, 521))
-        self.groupBox.setObjectName("groupBox")
-        self.treeWidget = QtWidgets.QTreeWidget(self.groupBox)
-        self.treeWidget.setGeometry(QtCore.QRect(10, 40, 511, 421))
-        self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.headerItem().setText(0, "Hostname")
-        self.label_3 = QtWidgets.QLabel(self.groupBox)
-        self.label_3.setGeometry(QtCore.QRect(120, 480, 71, 16))
-        self.label_3.setObjectName("label_3")
-        self.lineEdit_3 = QtWidgets.QLineEdit(self.groupBox)
-        self.lineEdit_3.setGeometry(QtCore.QRect(200, 480, 113, 20))
-        self.lineEdit_3.setObjectName("lineEdit_3")
-        self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_2.setGeometry(QtCore.QRect(20, 20, 381, 151))
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.lineEdit = QtWidgets.QLineEdit(self.groupBox_2)
-        self.lineEdit.setGeometry(QtCore.QRect(100, 60, 251, 20))
-        self.lineEdit.setObjectName("lineEdit")
-        self.lineEdit_2 = QtWidgets.QLineEdit(self.groupBox_2)
-        self.lineEdit_2.setGeometry(QtCore.QRect(100, 90, 251, 20))
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.label = QtWidgets.QLabel(self.groupBox_2)
-        self.label.setGeometry(QtCore.QRect(20, 60, 47, 13))
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.groupBox_2)
-        self.label_2.setGeometry(QtCore.QRect(20, 90, 47, 13))
-        self.label_2.setObjectName("label_2")
-        self.pushButton = QtWidgets.QPushButton(self.groupBox_2)
-        self.pushButton.setGeometry(QtCore.QRect(120, 120, 75, 23))
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self.groupBox_2)
-        self.pushButton_2.setGeometry(QtCore.QRect(244, 120, 81, 23))
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.label_5 = QtWidgets.QLabel(self.groupBox_2)
-        self.label_5.setGeometry(QtCore.QRect(20, 30, 47, 13))
-        self.label_5.setObjectName("label_5")
-        self.lineEdit_5 = QtWidgets.QLineEdit(self.groupBox_2)
-        self.lineEdit_5.setGeometry(QtCore.QRect(100, 30, 251, 20))
-        self.lineEdit_5.setObjectName("lineEdit_5")
-        self.groupBox_3 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_3.setGeometry(QtCore.QRect(560, 20, 541, 341))
-        self.groupBox_3.setObjectName("groupBox_3")
-        self.treeWidget_2 = QtWidgets.QTreeWidget(self.groupBox_3)
-        self.treeWidget_2.setGeometry(QtCore.QRect(10, 30, 521, 241))
-        self.treeWidget_2.setObjectName("treeWidget_2")
-        self.lineEdit_3.setReadOnly(True)
-
-
-        self.pushButton_3 = QtWidgets.QPushButton(self.groupBox_3)
-        self.pushButton_3.setGeometry(QtCore.QRect(50, 290, 131, 23))
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.label_4 = QtWidgets.QLabel(self.groupBox_3)
-        self.label_4.setGeometry(QtCore.QRect(230, 290, 71, 16))
-        self.label_4.setObjectName("label_4")
-        self.lineEdit_4 = QtWidgets.QLineEdit(self.groupBox_3)
-        self.lineEdit_4.setGeometry(QtCore.QRect(310, 290, 113, 20))
-        self.lineEdit_4.setObjectName("lineEdit_4")
-
-
-
-        self.groupBox_4 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_4.setGeometry(QtCore.QRect(560, 380, 541, 261))
-        self.groupBox_4.setObjectName("groupBox_4")
-
-        self.lineEdit_6 = QtWidgets.QLineEdit(self.groupBox_4)
-        self.lineEdit_6.setGeometry(QtCore.QRect(310, 220, 113, 20))
-        self.lineEdit_6.setObjectName("lineEdit_6")
-        self.lineEdit_6.setReadOnly(True)
-
-        self.label_6 = QtWidgets.QLabel(self.groupBox_4)
-        self.label_6.setGeometry(QtCore.QRect(230, 220, 71, 16))
-        self.label_6.setObjectName("label_6")
-
-        self.listWidget = QtWidgets.QListWidget(self.groupBox_4)
-        self.listWidget.setGeometry(QtCore.QRect(10, 20, 521, 192))
-        self.listWidget.setObjectName("listWidget")
-        self.pushButton_4 = QtWidgets.QPushButton(self.groupBox_4)
-        self.pushButton_4.setGeometry(QtCore.QRect(50, 220, 131, 23))
-        self.pushButton_4.setObjectName("pushButton_4")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1120, 21))
@@ -379,14 +299,90 @@ class Ui_Dialog(QMainWindow):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.lineEdit_4.setReadOnly(True)
-        self.pushButton_2.setEnabled(False)
-        self.pushButton_3.setEnabled(False)
-        self.pushButton_4.setEnabled(False)
+        
+        self.SettingsAreaGroup = QtWidgets.QGroupBox(self.centralwidget)
+        self.SettingsAreaGroup.setGeometry(QtCore.QRect(20, 20, 381, 151))
+        self.SettingsAreaGroup.setObjectName("SettingsAreaGroup")
+        self.labelApiFQDN = QtWidgets.QLabel(self.SettingsAreaGroup)
+        self.labelApiFQDN.setGeometry(QtCore.QRect(20, 30, 70, 13))
+        self.labelApiFQDN.setObjectName("labelApiFQDN")
+        self.labelClientId = QtWidgets.QLabel(self.SettingsAreaGroup)
+        self.labelClientId.setGeometry(QtCore.QRect(20, 60, 70, 13))
+        self.labelClientId.setObjectName("labelClientId")
+        self.labelApiKey = QtWidgets.QLabel(self.SettingsAreaGroup)
+        self.labelApiKey.setGeometry(QtCore.QRect(20, 90, 70, 13))
+        self.labelApiKey.setObjectName("labelApiKey")
+        self.inputApiFQDN = QtWidgets.QLineEdit(self.SettingsAreaGroup)
+        self.inputApiFQDN.setGeometry(QtCore.QRect(100, 60, 251, 20))
+        self.inputApiFQDN.setObjectName("inputApiFQDN")
+        self.inputClientId = QtWidgets.QLineEdit(self.SettingsAreaGroup)
+        self.inputClientId.setGeometry(QtCore.QRect(100, 90, 251, 20))
+        self.inputClientId.setObjectName("inputClientId")
+        self.inputApiKey = QtWidgets.QLineEdit(self.SettingsAreaGroup)
+        self.inputApiKey.setGeometry(QtCore.QRect(100, 30, 251, 20))
+        self.inputApiKey.setObjectName("inputApiKey")
+        self.TestConnectionButton = QtWidgets.QPushButton(self.SettingsAreaGroup)
+        self.TestConnectionButton.setGeometry(QtCore.QRect(100, 120, 120, 23))
+        self.TestConnectionButton.setObjectName("TestConnectionButton")
+        self.LoadComputersButton = QtWidgets.QPushButton(self.SettingsAreaGroup)
+        self.LoadComputersButton.setGeometry(QtCore.QRect(220, 120, 120, 23))
+        self.LoadComputersButton.setObjectName("LoadComputersButton")
+        self.LoadComputersButton.setEnabled(False)
 
+        self.AllComputersAreaGroup = QtWidgets.QGroupBox(self.centralwidget)
+        self.AllComputersAreaGroup.setGeometry(QtCore.QRect(20, 180, 531, 521))
+        self.AllComputersAreaGroup.setObjectName("AllComputersAreaGroup")
+        self.AllComputersArea = QtWidgets.QTreeWidget(self.AllComputersAreaGroup)
+        self.AllComputersArea.setGeometry(QtCore.QRect(10, 30, 511, 445))
+        self.AllComputersArea.setObjectName("AllComputersArea")
+        self.AllComputersArea.headerItem().setText(0, "Hostname")
+        self.labelTotalComputers = QtWidgets.QLabel(self.AllComputersAreaGroup)
+        self.labelTotalComputers.setGeometry(QtCore.QRect(120, 480, 71, 16))
+        self.labelTotalComputers.setObjectName("labelTotalComputers")
+        self.inputAllComputersTotal = QtWidgets.QLineEdit(self.AllComputersAreaGroup)
+        self.inputAllComputersTotal.setGeometry(QtCore.QRect(200, 480, 113, 20))
+        self.inputAllComputersTotal.setObjectName("inputAllComputersTotal")
+        self.inputAllComputersTotal.setReadOnly(True)
+                
+        self.DuplicateComputersAreaGroup = QtWidgets.QGroupBox(self.centralwidget)
+        self.DuplicateComputersAreaGroup.setGeometry(QtCore.QRect(560, 20, 541, 405))
+        self.DuplicateComputersAreaGroup.setObjectName("DuplicateComputersAreaGroup")
+        self.DuplicateComputersArea = QtWidgets.QTreeWidget(self.DuplicateComputersAreaGroup)
+        self.DuplicateComputersArea.setGeometry(QtCore.QRect(10, 30, 521, 335))
+        self.DuplicateComputersArea.setObjectName("DuplicateComputersArea")
+        self.LoadDuplicatesButton = QtWidgets.QPushButton(self.DuplicateComputersAreaGroup)
+        self.LoadDuplicatesButton.setGeometry(QtCore.QRect(50, 370, 131, 23))
+        self.LoadDuplicatesButton.setObjectName("LoadDuplicatesButton")
+        self.LoadDuplicatesButton.setEnabled(False)
+        self.labelTotalDuplicateComputers = QtWidgets.QLabel(self.DuplicateComputersAreaGroup)
+        self.labelTotalDuplicateComputers.setGeometry(QtCore.QRect(230, 370, 71, 16))
+        self.labelTotalDuplicateComputers.setObjectName("labelTotalDuplicateComputers")
+        self.inputDuplicateComputersTotal = QtWidgets.QLineEdit(self.DuplicateComputersAreaGroup)
+        self.inputDuplicateComputersTotal.setGeometry(QtCore.QRect(310, 370, 113, 20))
+        self.inputDuplicateComputersTotal.setObjectName("inputDuplicateComputersTotal")
+        self.inputDuplicateComputersTotal.setReadOnly(True)
+
+        self.DeleteDuplicatesAreaGroup = QtWidgets.QGroupBox(self.centralwidget)
+        self.DeleteDuplicatesAreaGroup.setGeometry(QtCore.QRect(560, 440, 541, 261))
+        self.DeleteDuplicatesAreaGroup.setObjectName("DeleteDuplicatesAreaGroup")
+        self.DeleteDuplicatesArea = QtWidgets.QListWidget(self.DeleteDuplicatesAreaGroup)
+        self.DeleteDuplicatesArea.setGeometry(QtCore.QRect(10, 25, 521, 192))
+        self.DeleteDuplicatesArea.setObjectName("DeleteDuplicatesArea")
+        self.DeleteDuplicatesButton = QtWidgets.QPushButton(self.DeleteDuplicatesAreaGroup)
+        self.DeleteDuplicatesButton.setGeometry(QtCore.QRect(50, 220, 131, 23))
+        self.DeleteDuplicatesButton.setObjectName("DeleteDuplicatesButton")
+        self.DeleteDuplicatesButton.setEnabled(False)
+        self.labelTotalComputersForDeletion = QtWidgets.QLabel(self.DeleteDuplicatesAreaGroup)
+        self.labelTotalComputersForDeletion.setGeometry(QtCore.QRect(230, 220, 71, 16))
+        self.labelTotalComputersForDeletion.setObjectName("labelTotalComputersForDeletion")
+        self.inputDeleteDuplicateTotal = QtWidgets.QLineEdit(self.DeleteDuplicatesAreaGroup)
+        self.inputDeleteDuplicateTotal.setGeometry(QtCore.QRect(310, 220, 113, 20))
+        self.inputDeleteDuplicateTotal.setObjectName("inputDeleteDuplicateTotal")
+        self.inputDeleteDuplicateTotal.setReadOnly(True)
+        
+        
 
         self.headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8','accept': 'application/json','Accept-Encoding': 'gzip'}
-
 
         self.sira = Queue()
         self.sira2 = Queue()
@@ -404,46 +400,46 @@ class Ui_Dialog(QMainWindow):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        self.pushButton.clicked.connect(self.function)
-        self.pushButton_2.clicked.connect(self.start)
-        self.pushButton_3.clicked.connect(self.getdublicate)
-        self.treeWidget_2.itemDoubleClicked.connect(self.olurmu)
-        self.pushButton_4.clicked.connect(self.sendDelete)
+        self.TestConnectionButton.clicked.connect(self.function)
+        self.LoadComputersButton.clicked.connect(self.start)
+        self.LoadDuplicatesButton.clicked.connect(self.GetDuplicate)
+        self.DuplicateComputersArea.itemDoubleClicked.connect(self.olurmu)
+        self.DeleteDuplicatesButton.clicked.connect(self.sendDelete)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "AMP for Endpoints Duplicate Finder"))
-        self.groupBox.setTitle(_translate("MainWindow", "ALL Computers"))
-        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "Connector Version"))
-        self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Policy Name"))
-        self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Connector ID"))
-        self.treeWidget.headerItem().setText(4, _translate("MainWindow", "Operation System"))
-        self.label_3.setText(_translate("MainWindow", "Total Number :"))
-        self.groupBox_2.setTitle(_translate("MainWindow", "API Connection Settings"))
-        self.label.setText(_translate("MainWindow", "Client ID :"))
-        self.label_2.setText(_translate("MainWindow", "Api Key :"))
-        self.pushButton.setText(_translate("MainWindow", "Test Connect"))
-        self.pushButton_2.setText(_translate("MainWindow", "Get Computers"))
-        self.label_5.setText(_translate("MainWindow", "Api Url :"))
-        self.groupBox_3.setTitle(_translate("MainWindow", "Duplicate Computers"))
-        self.treeWidget_2.headerItem().setText(0, _translate("MainWindow", "Computers"))
-        self.treeWidget_2.headerItem().setText(1, _translate("MainWindow", "Count"))
-        self.treeWidget_2.headerItem().setText(2, _translate("MainWindow", "Policy Name"))
+        self.AllComputersAreaGroup.setTitle(_translate("MainWindow", "Computers"))
+        self.AllComputersArea.headerItem().setText(1, _translate("MainWindow", "Connector Version"))
+        self.AllComputersArea.headerItem().setText(2, _translate("MainWindow", "Policy Name"))
+        self.AllComputersArea.headerItem().setText(3, _translate("MainWindow", "Connector ID"))
+        self.AllComputersArea.headerItem().setText(4, _translate("MainWindow", "Operation System"))
+        self.labelTotalComputers.setText(_translate("MainWindow", "Total #"))
+        self.SettingsAreaGroup.setTitle(_translate("MainWindow", "Connection settings"))
+        self.labelClientId.setText(_translate("MainWindow", "Client ID:"))
+        self.labelApiKey.setText(_translate("MainWindow", "API Key:"))
+        self.TestConnectionButton.setText(_translate("MainWindow", "Test connection"))
+        self.LoadComputersButton.setText(_translate("MainWindow", "Load computers"))
+        self.labelApiFQDN.setText(_translate("MainWindow", "API FQDN:"))
+        self.DuplicateComputersAreaGroup.setTitle(_translate("MainWindow", "Duplicate computers"))
+        self.DuplicateComputersArea.headerItem().setText(0, _translate("MainWindow", "Computer"))
+        self.DuplicateComputersArea.headerItem().setText(1, _translate("MainWindow", "Count"))
+        self.DuplicateComputersArea.headerItem().setText(2, _translate("MainWindow", "Policy Name"))
 
-        __sortingEnabled = self.treeWidget_2.isSortingEnabled()
-        self.treeWidget_2.setSortingEnabled(False)
-        self.treeWidget_2.setSortingEnabled(__sortingEnabled)
-        self.pushButton_3.setText(_translate("MainWindow", "Get Information"))
-        self.label_4.setText(_translate("MainWindow", "Total Number :"))
-        self.label_6.setText(_translate("MainWindow", "Total Number :"))
-        self.groupBox_4.setTitle(_translate("MainWindow", "Delete Computers"))
-        self.pushButton_4.setText(_translate("MainWindow", "Delete Computers"))
+        __sortingEnabled = self.DuplicateComputersArea.isSortingEnabled()
+        self.DuplicateComputersArea.setSortingEnabled(False)
+        self.DuplicateComputersArea.setSortingEnabled(__sortingEnabled)
+        self.LoadDuplicatesButton.setText(_translate("MainWindow", "Load duplicates"))
+        self.labelTotalDuplicateComputers.setText(_translate("MainWindow", "Total #"))
+        self.labelTotalComputersForDeletion.setText(_translate("MainWindow", "Total #"))
+        self.DeleteDuplicatesAreaGroup.setTitle(_translate("MainWindow", "Computers for deletion"))
+        self.DeleteDuplicatesButton.setText(_translate("MainWindow", "Delete computers"))
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('gtk+')
-    app.setStyleSheet("b")
+    #app.setStyleSheet("b")
     win = Ui_Dialog()
     cls = QMainWindow()
     win.setupUi(cls)
